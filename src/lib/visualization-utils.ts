@@ -33,7 +33,14 @@ export function calculateConnectionPath(
 
   // For straight lines (memory connections)
   if (type === "memory") {
-    return `M${fromPosition.x},${fromPosition.y} L${toPosition.x},${toPosition.y}`;
+    // Add slight offset for better visibility
+    const offsetX = (toPosition.x - fromPosition.x) * 0.1;
+    const offsetY = (toPosition.y - fromPosition.y) * 0.1;
+    return `M${fromPosition.x},${fromPosition.y} Q${
+      (fromPosition.x + toPosition.x) / 2 + offsetX
+    },${(fromPosition.y + toPosition.y) / 2 + offsetY} ${toPosition.x},${
+      toPosition.y
+    }`;
   }
 
   // For curved lines (pipes and queues)
