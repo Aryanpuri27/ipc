@@ -101,7 +101,11 @@ export function getProcessStateIndicator(state: Process["state"]): {
     case "idle":
       return { color: "var(--muted-foreground)", label: "Idle" };
     case "running":
-      return { color: "var(--primary)", label: "Running" };
+      return {
+        color: "var(--primary)",
+        label: "Running",
+        animation: "pulse-slow",
+      };
     case "blocked":
       return {
         color: "var(--amber-500)",
