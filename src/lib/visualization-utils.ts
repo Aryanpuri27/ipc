@@ -89,9 +89,6 @@ export function calculateDataTransferPosition(
   };
 }
 
-/**
- * Generates a visual indicator for a process's state
- */
 export function getProcessStateIndicator(state: Process["state"]): {
   color: string;
   label: string;
