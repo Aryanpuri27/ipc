@@ -1,16 +1,5 @@
-/**
- * Visualization Utilities
- *
- * This file contains utilities for enhancing visualization of IPC mechanisms,
- * deadlocks, and other synchronization concepts in the application.
- */
-
 import { Process, Connection, Position, DataTransfer } from "./types";
 import { DeadlockCycle } from "./deadlock-utils";
-
-/**
- * Animation parameters for visualizing data transfers
- */
 export interface AnimationParams {
   connectionId: string;
   animationDelay: string;
@@ -18,10 +7,6 @@ export interface AnimationParams {
   color?: string;
 }
 
-/**
- * Calculates the path for a connection between two processes
- * Adds a slight curve to make the connection more visually appealing
- */
 export function calculateConnectionPath(
   fromPosition: Position,
   toPosition: Position,
@@ -31,9 +16,7 @@ export function calculateConnectionPath(
   const dy = toPosition.y - fromPosition.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // For straight lines (memory connections)
   if (type === "memory") {
-    // Add slight offset for better visibility
     const offsetX = (toPosition.x - fromPosition.x) * 0.1;
     const offsetY = (toPosition.y - fromPosition.y) * 0.1;
     return `M${fromPosition.x},${fromPosition.y} Q${
@@ -43,13 +26,10 @@ export function calculateConnectionPath(
     }`;
   }
 
-  // For curved lines (pipes and queues)
-  // Calculate control point for the curve
   const curveOffset = distance * 0.2;
   const midX = (fromPosition.x + toPosition.x) / 2;
   const midY = (fromPosition.y + toPosition.y) / 2;
 
-  // Perpendicular vector for control point
   const perpX = -dy / distance;
   const perpY = dx / distance;
 
@@ -59,10 +39,6 @@ export function calculateConnectionPath(
   return `M${fromPosition.x},${fromPosition.y} Q${controlX},${controlY} ${toPosition.x},${toPosition.y}`;
 }
 
-/**
- * Generates animation parameters for visualizing deadlock cycles
- * Creates a flowing animation that highlights the circular dependency
- */
 export function getDeadlockAnimationParams(
   cycle: DeadlockCycle,
   connections: Connection[]
@@ -75,9 +51,6 @@ export function getDeadlockAnimationParams(
   }));
 }
 
-/**
- * Calculates positions for data transfer particles along a connection
- */
 export function calculateDataTransferPosition(
   fromPosition: Position,
   toPosition: Position,
@@ -97,32 +70,33 @@ export function getProcessStateIndicator(state: Process["state"]): {
   switch (state) {
     case "idle":
       return { color: "var(--muted-foreground)", label: "Idle" };
+
     case "running":
       return {
         color: "var(--primary)",
         label: "Running",
         animation: "pulse-slow",
       };
+
     case "blocked":
       return {
         color: "var(--amber-500)",
         label: "Blocked",
         animation: "pulse",
       };
+
     case "deadlocked":
       return {
         color: "var(--destructive)",
         label: "Deadlocked",
         animation: "pulse",
       };
+
     default:
       return { color: "var(--muted-foreground)", label: "Unknown" };
   }
 }
 
-/**
- * Generates a tooltip content for a connection based on its state and type
- */
 export function getConnectionTooltip(
   connection: Connection,
   fromProcess?: Process,
