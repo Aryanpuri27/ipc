@@ -4,7 +4,7 @@ import ProcessCanvas from './ProcessCanvas';
 import IPCControlSidebar from './IPCControlSidebar';
 import LogPanel, { LogEntry } from './LogPanel';
 import { Button } from '@/components/ui/button';
-import { SidebarIcon, Info, Logs } from 'lucide-react';
+import { SidebarIcon, Info, Logs, ShieldAlert } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -18,6 +18,7 @@ const IPCSynchronizer: React.FC = () => {
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [demoMode, setDemoMode] = useState(false);
+  const [issuesDetected, setIssuesDetected] = useState(false);
 
   // Reference to ProcessCanvas for reset functionality
   const processCanvasRef = React.useRef<HTMLDivElement>(null);
@@ -34,10 +35,18 @@ const IPCSynchronizer: React.FC = () => {
   
   const handleLogEvent = (log: LogEntry) => {
     setLogs(prevLogs => [...prevLogs, log]);
+    
+    // Show log panel automatically when errors or high severity warnings are detected
+    if (log.type === 'error' || 
+        (log.type === 'warning' && log?.additionalInfo?.severity === 'high')) {
+      setShowLogs(true);
+      setIssuesDetected(true);
+    }
   };
   
   const clearLogs = () => {
     setLogs([]);
+    setIssuesDetected(false);
   };
   
   const toggleDemoMode = () => {
@@ -67,6 +76,18 @@ const IPCSynchronizer: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-2">
+              {issuesDetected && !showLogs && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex items-center gap-1 animate-pulse"
+                  onClick={() => setShowLogs(true)}
+                >
+                  <ShieldAlert className="h-4 w-4" />
+                  Issues Detected
+                </Button>
+              )}
+              
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -91,8 +112,12 @@ const IPCSynchronizer: React.FC = () => {
                       variant={showLogs ? "default" : "outline"}
                       size="icon"
                       onClick={() => setShowLogs(!showLogs)}
+                      className={issuesDetected && !showLogs ? "relative" : ""}
                     >
                       <Logs className="h-4 w-4" />
+                      {issuesDetected && !showLogs && (
+                        <span className="absolute top-0 right-0 w-2 h-2 bg-destructive rounded-full" />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
