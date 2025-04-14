@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Process, Position, IPCType } from '@/lib/types';
 import { 
   MoreVertical, 
   Trash2, 
-  PipeLine, 
+  PipetteIcon, 
   MessageSquare, 
   Database, 
   Send
@@ -132,7 +131,7 @@ const ProcessNode: React.FC<ProcessNodeProps> = ({
                 onStartConnection(process.id, 'pipe');
               }}
             >
-              <PipeLine className="mr-2 h-4 w-4 text-pipe" />
+              <PipetteIcon className="mr-2 h-4 w-4 text-pipe" />
               Create Pipe
             </DropdownMenuItem>
             <DropdownMenuItem

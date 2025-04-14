@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PipeLine, MessageSquare, Database, BarChart, Settings } from 'lucide-react';
+import { PipetteIcon, MessageSquare, Database, BarChart, Settings } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface IPCControlSidebarProps {
@@ -37,7 +36,7 @@ const IPCControlSidebar: React.FC<IPCControlSidebarProps> = ({ onResetCanvas }) 
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <PipeLine className="h-5 w-5 text-pipe" />
+                  <PipetteIcon className="h-5 w-5 text-pipe" />
                   <h3 className="font-medium">Pipes</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
