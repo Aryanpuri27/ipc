@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import ProcessNode from './ProcessNode';
@@ -26,7 +25,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
   const canvasRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Log event helper function
   const logEvent = (type: LogEntry['type'], message: string, details?: string) => {
     if (onLogEvent) {
       onLogEvent({
@@ -137,7 +135,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
   const removeProcess = (processId: string) => {
     const process = processes.find(p => p.id === processId);
     
-    // Find all connections to be removed
     const connectionsToRemove = connections.filter(c => c.from === processId || c.to === processId);
     
     setProcesses(processes.filter(p => p.id !== processId));
@@ -244,7 +241,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
     }, 100);
   };
 
-  // Demo for deadlock detection
   const createDeadlockDemoSimulation = () => {
     setProcesses([]);
     setConnections([]);
@@ -252,7 +248,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
     
     logEvent('info', 'Demo Started', 'Setting up Deadlock Detection simulation');
 
-    // Create processes in a ring formation
     const process1: Process = {
       id: generateId(),
       name: "Process A",
@@ -283,7 +278,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
     setProcesses([process1, process2, process3]);
 
     setTimeout(() => {
-      // Create circular dependency with memory resources
       const connection1: Connection = {
         id: generateId(),
         from: process1.id,
@@ -322,7 +316,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
     }, 100);
   };
 
-  // Demo for pipe communication
   const createPipeDemoSimulation = () => {
     setProcesses([]);
     setConnections([]);
@@ -330,7 +323,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
     
     logEvent('info', 'Demo Started', 'Setting up Pipe Communication simulation');
 
-    // Create parent and child process
     const parentProcess: Process = {
       id: generateId(),
       name: "Parent Process",
@@ -352,7 +344,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
     setProcesses([parentProcess, childProcess]);
 
     setTimeout(() => {
-      // Create bidirectional pipe
       const pipeConnection: Connection = {
         id: generateId(),
         from: parentProcess.id,
@@ -373,6 +364,348 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
     }, 100);
   };
 
+  const createReadersWritersSimulation = () => {
+    setProcesses([]);
+    setConnections([]);
+    setDataTransfers([]);
+    
+    logEvent('info', 'Demo Started', 'Setting up Readers-Writers Problem simulation');
+
+    const database: Process = {
+      id: generateId(),
+      name: "Database",
+      position: { x: 350, y: 250 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const reader1: Process = {
+      id: generateId(),
+      name: "Reader 1",
+      position: { x: 200, y: 150 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const reader2: Process = {
+      id: generateId(),
+      name: "Reader 2",
+      position: { x: 200, y: 350 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const writer1: Process = {
+      id: generateId(),
+      name: "Writer 1",
+      position: { x: 500, y: 150 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const writer2: Process = {
+      id: generateId(),
+      name: "Writer 2",
+      position: { x: 500, y: 350 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    setProcesses([database, reader1, reader2, writer1, writer2]);
+
+    setTimeout(() => {
+      const reader1ToDb: Connection = {
+        id: generateId(),
+        from: reader1.id,
+        to: database.id,
+        type: 'memory',
+        state: 'idle',
+        currentLoad: 0
+      };
+
+      const reader2ToDb: Connection = {
+        id: generateId(),
+        from: reader2.id,
+        to: database.id,
+        type: 'memory',
+        state: 'idle',
+        currentLoad: 0
+      };
+
+      const writer1ToDb: Connection = {
+        id: generateId(),
+        from: writer1.id,
+        to: database.id,
+        type: 'memory',
+        state: 'idle',
+        currentLoad: 0
+      };
+
+      const writer2ToDb: Connection = {
+        id: generateId(),
+        from: writer2.id,
+        to: database.id,
+        type: 'memory',
+        state: 'idle',
+        currentLoad: 0
+      };
+
+      setConnections([reader1ToDb, reader2ToDb, writer1ToDb, writer2ToDb]);
+      
+      logEvent('success', 'Demo Ready', 'Readers-Writers Problem simulation created. Multiple readers can access simultaneously, but writers need exclusive access.');
+      
+      onLogEvent?.({
+        id: generateId(),
+        timestamp: new Date(),
+        type: 'info',
+        message: 'Readers-Writers Problem',
+        details: 'This demonstrates shared resource access with different priorities',
+        additionalInfo: {
+          severity: 'low',
+          processes: ['Reader 1', 'Reader 2', 'Writer 1', 'Writer 2', 'Database'],
+          resources: ['Shared Memory'],
+          solutions: [
+            'Use read-write locks to allow multiple readers but only one writer',
+            'Implement priority mechanisms to prevent starvation'
+          ]
+        }
+      });
+
+      toast({
+        title: "Simulation Created",
+        description: "Readers-Writers Problem simulation has been set up",
+      });
+    }, 100);
+  };
+
+  const createDiningPhilosophersSimulation = () => {
+    setProcesses([]);
+    setConnections([]);
+    setDataTransfers([]);
+    
+    logEvent('info', 'Demo Started', 'Setting up Dining Philosophers Problem simulation');
+
+    const center = { x: 350, y: 250 };
+    const radius = 150;
+    const numPhilosophers = 5;
+    const philosophers: Process[] = [];
+    const forks: Process[] = [];
+
+    for (let i = 0; i < numPhilosophers; i++) {
+      const angle = (i * 2 * Math.PI) / numPhilosophers;
+      const x = center.x + radius * Math.cos(angle);
+      const y = center.y + radius * Math.sin(angle);
+      
+      philosophers.push({
+        id: generateId(),
+        name: `Philosopher ${i+1}`,
+        position: { x, y },
+        state: 'idle',
+        resources: [],
+        waitingFor: null
+      });
+      
+      const forkAngle = ((i + 0.5) * 2 * Math.PI) / numPhilosophers;
+      const forkRadius = radius * 0.7;
+      const forkX = center.x + forkRadius * Math.cos(forkAngle);
+      const forkY = center.y + forkRadius * Math.sin(forkAngle);
+      
+      forks.push({
+        id: generateId(),
+        name: `Fork ${i+1}`,
+        position: { x: forkX, y: forkY },
+        state: 'idle',
+        resources: [],
+        waitingFor: null
+      });
+    }
+    
+    setProcesses([...philosophers, ...forks]);
+
+    setTimeout(() => {
+      const connections: Connection[] = [];
+      
+      for (let i = 0; i < numPhilosophers; i++) {
+        const leftForkIndex = i;
+        const rightForkIndex = (i + 1) % numPhilosophers;
+        
+        connections.push({
+          id: generateId(),
+          from: philosophers[i].id,
+          to: forks[leftForkIndex].id,
+          type: 'memory',
+          state: 'idle',
+          currentLoad: 0
+        });
+        
+        connections.push({
+          id: generateId(),
+          from: philosophers[i].id,
+          to: forks[rightForkIndex].id,
+          type: 'memory',
+          state: 'idle',
+          currentLoad: 0
+        });
+      }
+      
+      setConnections(connections);
+      
+      logEvent('success', 'Demo Ready', 'Dining Philosophers Problem simulation created. Use the simulation to see how deadlocks can form.');
+      
+      onLogEvent?.({
+        id: generateId(),
+        timestamp: new Date(),
+        type: 'info',
+        message: 'Dining Philosophers Problem',
+        details: 'Classic synchronization problem demonstrating deadlock potential',
+        additionalInfo: {
+          severity: 'medium',
+          processes: philosophers.map(p => p.name),
+          resources: forks.map(f => f.name),
+          solutions: [
+            'Implement resource hierarchy (assign numbers to forks)',
+            'Allow at most N-1 philosophers to sit simultaneously',
+            'Use an arbitrator (waiter) to control resource allocation'
+          ]
+        }
+      });
+
+      toast({
+        title: "Simulation Created",
+        description: "Dining Philosophers Problem simulation has been set up",
+      });
+    }, 100);
+  };
+
+  const createBoundedBufferSimulation = () => {
+    setProcesses([]);
+    setConnections([]);
+    setDataTransfers([]);
+    
+    logEvent('info', 'Demo Started', 'Setting up Bounded Buffer Problem simulation');
+
+    const producer1: Process = {
+      id: generateId(),
+      name: "Fast Producer",
+      position: { x: 150, y: 150 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const producer2: Process = {
+      id: generateId(),
+      name: "Slow Producer",
+      position: { x: 150, y: 350 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const consumer1: Process = {
+      id: generateId(),
+      name: "Fast Consumer",
+      position: { x: 550, y: 150 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const consumer2: Process = {
+      id: generateId(),
+      name: "Slow Consumer",
+      position: { x: 550, y: 350 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const buffer: Process = {
+      id: generateId(),
+      name: "Small Buffer",
+      position: { x: 350, y: 250 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    setProcesses([producer1, producer2, consumer1, consumer2, buffer]);
+
+    setTimeout(() => {
+      const producer1ToBuffer: Connection = {
+        id: generateId(),
+        from: producer1.id,
+        to: buffer.id,
+        type: 'queue',
+        state: 'idle',
+        capacity: 3,
+        currentLoad: 0
+      };
+
+      const producer2ToBuffer: Connection = {
+        id: generateId(),
+        from: producer2.id,
+        to: buffer.id,
+        type: 'queue',
+        state: 'idle',
+        capacity: 3,
+        currentLoad: 0
+      };
+
+      const bufferToConsumer1: Connection = {
+        id: generateId(),
+        from: buffer.id,
+        to: consumer1.id,
+        type: 'queue',
+        state: 'idle',
+        capacity: 3,
+        currentLoad: 0
+      };
+
+      const bufferToConsumer2: Connection = {
+        id: generateId(),
+        from: buffer.id,
+        to: consumer2.id,
+        type: 'queue',
+        state: 'idle',
+        capacity: 3,
+        currentLoad: 0
+      };
+
+      setConnections([producer1ToBuffer, producer2ToBuffer, bufferToConsumer1, bufferToConsumer2]);
+      
+      logEvent('success', 'Demo Ready', 'Bounded Buffer Problem simulation created with very small buffer capacity.');
+      
+      onLogEvent?.({
+        id: generateId(),
+        timestamp: new Date(),
+        type: 'warning',
+        message: 'Bounded Buffer Challenge',
+        details: 'Small buffer size will lead to bottlenecks when producers are faster than consumers',
+        additionalInfo: {
+          severity: 'medium',
+          processes: ['Fast Producer', 'Slow Producer', 'Fast Consumer', 'Slow Consumer', 'Small Buffer'],
+          resources: ['Queue Buffers (capacity: 3)'],
+          solutions: [
+            'Increase buffer size',
+            'Implement backpressure mechanisms',
+            'Balance producer and consumer speeds'
+          ]
+        }
+      });
+
+      toast({
+        title: "Simulation Created",
+        description: "Bounded Buffer Problem simulation has been set up",
+      });
+    }, 100);
+  };
+
   useEffect(() => {
     if (dataTransfers.length === 0) return;
     
@@ -388,7 +721,6 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
           };
         }).filter(t => t.progress < 100);
         
-        // Log completed transfers
         completedTransfers.forEach(transfer => {
           const connection = connections.find(c => c.id === transfer.connectionId);
           if (connection) {
@@ -471,7 +803,7 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
           onClick={createProducerConsumerSimulation}
           className="flex items-center gap-1 ml-4"
         >
-          <span className="text-xs">Producer-Consumer Demo</span>
+          <span className="text-xs">Producer-Consumer</span>
         </Button>
         
         {demoMode && (
@@ -491,6 +823,30 @@ const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = fa
               className="flex items-center gap-1"
             >
               <span className="text-xs">Pipe Demo</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={createReadersWritersSimulation}
+              className="flex items-center gap-1"
+            >
+              <span className="text-xs">Readers-Writers</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={createDiningPhilosophersSimulation}
+              className="flex items-center gap-1"
+            >
+              <span className="text-xs">Dining Philosophers</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={createBoundedBufferSimulation}
+              className="flex items-center gap-1"
+            >
+              <span className="text-xs">Bounded Buffer</span>
             </Button>
           </>
         )}

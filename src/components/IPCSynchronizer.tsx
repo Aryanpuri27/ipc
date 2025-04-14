@@ -4,7 +4,7 @@ import ProcessCanvas from './ProcessCanvas';
 import IPCControlSidebar from './IPCControlSidebar';
 import LogPanel, { LogEntry } from './LogPanel';
 import { Button } from '@/components/ui/button';
-import { SidebarIcon, Info, Logs, ShieldAlert } from 'lucide-react';
+import { SidebarIcon, Info, Logs, ShieldAlert, Beaker } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -17,7 +17,7 @@ const IPCSynchronizer: React.FC = () => {
   const [showInfo, setShowInfo] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(true); // Default to true to show all demos
   const [issuesDetected, setIssuesDetected] = useState(false);
 
   // Reference to ProcessCanvas for reset functionality
@@ -60,7 +60,14 @@ const IPCSynchronizer: React.FC = () => {
       message: demoMode ? 'Demo Mode Disabled' : 'Demo Mode Enabled',
       details: demoMode 
         ? 'Reverting to standard operation mode' 
-        : 'Additional demo scenarios are now available'
+        : 'Additional demo scenarios are now available',
+      additionalInfo: {
+        solutions: demoMode ? [] : [
+          'Try the Readers-Writers demo to see how multiple readers can access a resource while writers need exclusive access',
+          'Explore the Dining Philosophers problem to understand circular wait conditions',
+          'Test the Bounded Buffer problem to see how limited resources affect producers and consumers'
+        ]
+      }
     });
   };
 
@@ -87,6 +94,23 @@ const IPCSynchronizer: React.FC = () => {
                   Issues Detected
                 </Button>
               )}
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={demoMode ? "default" : "outline"}
+                      size="icon"
+                      onClick={toggleDemoMode}
+                    >
+                      <Beaker className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{demoMode ? 'Disable' : 'Enable'} Demo Mode</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
               <TooltipProvider>
                 <Tooltip>
@@ -148,6 +172,15 @@ const IPCSynchronizer: React.FC = () => {
               Click anywhere on the canvas to create a process, then use the process menu to create connections to other processes. 
               Send data between processes to see communication in action.
             </p>
+            <p className="mb-2">
+              The tool includes classic synchronization problem simulations:
+            </p>
+            <ul className="list-disc ml-5 mb-2">
+              <li>Producer-Consumer Problem</li>
+              <li>Readers-Writers Problem</li>
+              <li>Dining Philosophers Problem</li>
+              <li>Bounded Buffer Problem</li>
+            </ul>
             <p>
               The tool can detect potential deadlocks and bottlenecks in your IPC communication setup.
             </p>
@@ -160,7 +193,7 @@ const IPCSynchronizer: React.FC = () => {
                 Close
               </Button>
               <Button
-                variant="outline"
+                variant={demoMode ? "default" : "outline"}
                 size="sm"
                 onClick={toggleDemoMode}
               >
