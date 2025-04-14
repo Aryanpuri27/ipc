@@ -58,9 +58,6 @@ const IPCControlSidebar: React.FC<IPCControlSidebarProps> = ({ onResetCanvas }) 
                 <div className="flex items-center gap-2">
                   <Database className="h-5 w-5 text-memory" />
                   <h3 className="font-medium">Shared Memory</h3>
-                  <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                    Coming soon
-                  </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Allows multiple processes to access the same memory region.
@@ -74,10 +71,11 @@ const IPCControlSidebar: React.FC<IPCControlSidebarProps> = ({ onResetCanvas }) 
               <CardTitle>Usage Instructions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
-              <p>1. Click on the canvas to create a process</p>
-              <p>2. Click the menu on a process to create IPC connections</p>
-              <p>3. Send data between processes to see communication</p>
-              <p>4. Observe for bottlenecks and deadlocks</p>
+              <p>1. Switch between Create and Hand tool modes</p>
+              <p>2. Click on the canvas to create a process</p>
+              <p>3. Click the menu on a process to create IPC connections</p>
+              <p>4. Send data between processes to see communication</p>
+              <p>5. Use the Producer-Consumer Demo to see a pre-built example</p>
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Process, Position, IPCType } from '@/lib/types';
 import { 
@@ -6,7 +7,8 @@ import {
   PipetteIcon, 
   MessageSquare, 
   Database, 
-  Send
+  Send,
+  Hand
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -148,7 +150,7 @@ const ProcessNode: React.FC<ProcessNodeProps> = ({
                 e.stopPropagation();
                 onStartConnection(process.id, 'memory');
               }}
-              disabled={true} // Disabled for first version
+              disabled={false} // Enabling shared memory option
             >
               <Database className="mr-2 h-4 w-4 text-memory" />
               Create Shared Memory
