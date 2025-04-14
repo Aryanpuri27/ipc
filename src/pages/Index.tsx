@@ -4,7 +4,7 @@ import IPCSynchronizer from "@/components/IPCSynchronizer";
 
 const Index = () => {
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="h-screen w-screen overflow-hidden">
       <IPCSynchronizer />
       <Toaster />
     </div>

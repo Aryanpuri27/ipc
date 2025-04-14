@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import ProcessCanvas from './ProcessCanvas';
 import IPCControlSidebar from './IPCControlSidebar';
+import LogPanel, { LogEntry } from './LogPanel';
 import { Button } from '@/components/ui/button';
-import { SidebarIcon, Info } from 'lucide-react';
+import { SidebarIcon, Info, Logs } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -14,6 +15,9 @@ import {
 const IPCSynchronizer: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [demoMode, setDemoMode] = useState(false);
 
   // Reference to ProcessCanvas for reset functionality
   const processCanvasRef = React.useRef<HTMLDivElement>(null);
@@ -26,6 +30,29 @@ const IPCSynchronizer: React.FC = () => {
       // and control the reset more elegantly
       window.location.reload();
     }
+  };
+  
+  const handleLogEvent = (log: LogEntry) => {
+    setLogs(prevLogs => [...prevLogs, log]);
+  };
+  
+  const clearLogs = () => {
+    setLogs([]);
+  };
+  
+  const toggleDemoMode = () => {
+    setDemoMode(!demoMode);
+    
+    // Add log entry about demo mode
+    handleLogEvent({
+      id: Math.random().toString(),
+      timestamp: new Date(),
+      type: 'info',
+      message: demoMode ? 'Demo Mode Disabled' : 'Demo Mode Enabled',
+      details: demoMode 
+        ? 'Reverting to standard operation mode' 
+        : 'Additional demo scenarios are now available'
+    });
   };
 
   return (
@@ -57,6 +84,23 @@ const IPCSynchronizer: React.FC = () => {
                 </Tooltip>
               </TooltipProvider>
               
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={showLogs ? "default" : "outline"}
+                      size="icon"
+                      onClick={() => setShowLogs(!showLogs)}
+                    >
+                      <Logs className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Event Logs</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
               <Button
                 variant="outline"
                 size="icon"
@@ -73,7 +117,7 @@ const IPCSynchronizer: React.FC = () => {
           <div className="bg-card border-b border-border p-4 text-sm">
             <h2 className="font-semibold mb-2">About IPC Synchronizer</h2>
             <p className="mb-2">
-              This tool helps visualize and debug Inter-Process Communication (IPC) mechanisms like pipes and message queues.
+              This tool helps visualize and debug Inter-Process Communication (IPC) mechanisms like pipes, message queues, and shared memory.
             </p>
             <p className="mb-2">
               Click anywhere on the canvas to create a process, then use the process menu to create connections to other processes. 
@@ -82,22 +126,44 @@ const IPCSynchronizer: React.FC = () => {
             <p>
               The tool can detect potential deadlocks and bottlenecks in your IPC communication setup.
             </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowInfo(false)}
-              className="mt-2"
-            >
-              Close
-            </Button>
+            <div className="mt-2 flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowInfo(false)}
+              >
+                Close
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleDemoMode}
+              >
+                {demoMode ? 'Disable Demo Mode' : 'Enable Demo Mode'}
+              </Button>
+            </div>
           </div>
         )}
         
-        {/* Main canvas area */}
-        <div className="flex-1 overflow-hidden">
-          <div ref={processCanvasRef} className="w-full h-full">
-            <ProcessCanvas />
+        {/* Main content area - split when logs are shown */}
+        <div className="flex-1 overflow-hidden flex">
+          {/* Canvas area */}
+          <div 
+            ref={processCanvasRef} 
+            className={`${showLogs ? 'w-2/3' : 'w-full'} h-full`}
+          >
+            <ProcessCanvas 
+              onLogEvent={handleLogEvent}
+              demoMode={demoMode}
+            />
           </div>
+          
+          {/* Logs panel */}
+          {showLogs && (
+            <div className="w-1/3 border-l border-border h-full">
+              <LogPanel logs={logs} onClearLogs={clearLogs} />
+            </div>
+          )}
         </div>
       </div>
       

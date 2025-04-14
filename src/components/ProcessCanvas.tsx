@@ -1,13 +1,20 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import ProcessNode from './ProcessNode';
 import IPCConnection from './IPCConnection';
 import { Process, Connection, Position, IPCType, DataTransfer } from '@/lib/types';
+import { LogEntry } from './LogPanel';
 import { generateId } from '@/lib/utils';
 import { Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const ProcessCanvas: React.FC = () => {
+interface ProcessCanvasProps {
+  onLogEvent?: (log: LogEntry) => void;
+  demoMode?: boolean;
+}
+
+const ProcessCanvas: React.FC<ProcessCanvasProps> = ({ onLogEvent, demoMode = false }) => {
   const [processes, setProcesses] = useState<Process[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [dataTransfers, setDataTransfers] = useState<DataTransfer[]>([]);
@@ -18,6 +25,19 @@ const ProcessCanvas: React.FC = () => {
   const [interactionMode, setInteractionMode] = useState<'create' | 'hand'>('create');
   const canvasRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Log event helper function
+  const logEvent = (type: LogEntry['type'], message: string, details?: string) => {
+    if (onLogEvent) {
+      onLogEvent({
+        id: generateId(),
+        timestamp: new Date(),
+        type,
+        message,
+        details
+      });
+    }
+  };
 
   const addProcess = (position: Position) => {
     const newProcess: Process = {
@@ -30,6 +50,7 @@ const ProcessCanvas: React.FC = () => {
     };
     
     setProcesses([...processes, newProcess]);
+    logEvent('info', 'Process Created', `${newProcess.name} added at position (${Math.round(position.x)}, ${Math.round(position.y)})`);
   };
 
   const startConnection = (processId: string, type: IPCType) => {
@@ -38,6 +59,9 @@ const ProcessCanvas: React.FC = () => {
       fromProcess: processId,
       type
     });
+    
+    const process = processes.find(p => p.id === processId);
+    logEvent('info', 'Connection Started', `Starting ${type} connection from ${process?.name}`);
     
     toast({
       title: "Connection Started",
@@ -50,6 +74,9 @@ const ProcessCanvas: React.FC = () => {
       return;
     }
 
+    const fromProcess = processes.find(p => p.id === connectMode.fromProcess);
+    const toProcess = processes.find(p => p.id === toProcessId);
+    
     const connectionExists = connections.some(
       conn => 
         (conn.from === connectMode.fromProcess && conn.to === toProcessId) ||
@@ -57,6 +84,8 @@ const ProcessCanvas: React.FC = () => {
     );
 
     if (connectionExists) {
+      logEvent('warning', 'Connection Failed', `Connection between ${fromProcess?.name} and ${toProcess?.name} already exists`);
+      
       toast({
         title: "Connection exists",
         description: "These processes are already connected",
@@ -78,6 +107,8 @@ const ProcessCanvas: React.FC = () => {
 
     setConnections([...connections, newConnection]);
     
+    logEvent('success', 'Connection Created', `${connectMode.type} established between ${fromProcess?.name} and ${toProcess?.name}`);
+    
     toast({
       title: "Connection Created",
       description: `Created ${connectMode.type} between processes`
@@ -88,6 +119,7 @@ const ProcessCanvas: React.FC = () => {
 
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (connectMode.active) {
+      logEvent('info', 'Connection Cancelled', 'Clicked on canvas instead of a process');
       setConnectMode({ active: false, type: 'pipe' });
       return;
     }
@@ -103,11 +135,21 @@ const ProcessCanvas: React.FC = () => {
   };
 
   const removeProcess = (processId: string) => {
+    const process = processes.find(p => p.id === processId);
+    
+    // Find all connections to be removed
+    const connectionsToRemove = connections.filter(c => c.from === processId || c.to === processId);
+    
     setProcesses(processes.filter(p => p.id !== processId));
     setConnections(connections.filter(c => c.from !== processId && c.to !== processId));
+    
+    logEvent('warning', `Process Removed`, `${process?.name} and ${connectionsToRemove.length} connection(s) were removed`);
   };
 
   const sendData = (fromProcessId: string, toProcessId: string) => {
+    const fromProcess = processes.find(p => p.id === fromProcessId);
+    const toProcess = processes.find(p => p.id === toProcessId);
+    
     const connection = connections.find(
       c => (c.from === fromProcessId && c.to === toProcessId) ||
            (c.type === 'pipe' && c.from === toProcessId && c.to === fromProcessId)
@@ -129,6 +171,8 @@ const ProcessCanvas: React.FC = () => {
       c.id === connection.id ? { ...c, state: 'active', currentLoad: (c.currentLoad || 0) + 1 } : c
     ));
     
+    logEvent('info', 'Data Transfer Started', `Sending data from ${fromProcess?.name} to ${toProcess?.name} via ${connection.type}`);
+    
     checkForDeadlocks();
   };
 
@@ -136,6 +180,8 @@ const ProcessCanvas: React.FC = () => {
     setProcesses([]);
     setConnections([]);
     setDataTransfers([]);
+
+    logEvent('info', 'Demo Started', 'Setting up Producer-Consumer Problem simulation');
 
     const producer: Process = {
       id: generateId(),
@@ -189,9 +235,140 @@ const ProcessCanvas: React.FC = () => {
 
       setConnections([producerToBuffer, bufferToConsumer]);
 
+      logEvent('success', 'Demo Ready', 'Producer-Consumer simulation created with limited buffer');
+
       toast({
         title: "Simulation Created",
         description: "Producer-Consumer problem simulation has been set up",
+      });
+    }, 100);
+  };
+
+  // Demo for deadlock detection
+  const createDeadlockDemoSimulation = () => {
+    setProcesses([]);
+    setConnections([]);
+    setDataTransfers([]);
+    
+    logEvent('info', 'Demo Started', 'Setting up Deadlock Detection simulation');
+
+    // Create processes in a ring formation
+    const process1: Process = {
+      id: generateId(),
+      name: "Process A",
+      position: { x: 250, y: 150 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const process2: Process = {
+      id: generateId(),
+      name: "Process B",
+      position: { x: 450, y: 150 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const process3: Process = {
+      id: generateId(),
+      name: "Process C",
+      position: { x: 350, y: 300 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    setProcesses([process1, process2, process3]);
+
+    setTimeout(() => {
+      // Create circular dependency with memory resources
+      const connection1: Connection = {
+        id: generateId(),
+        from: process1.id,
+        to: process2.id,
+        type: 'memory',
+        state: 'idle',
+        currentLoad: 0
+      };
+
+      const connection2: Connection = {
+        id: generateId(),
+        from: process2.id,
+        to: process3.id,
+        type: 'memory',
+        state: 'idle',
+        currentLoad: 0
+      };
+
+      const connection3: Connection = {
+        id: generateId(),
+        from: process3.id,
+        to: process1.id,
+        type: 'memory',
+        state: 'idle',
+        currentLoad: 0
+      };
+
+      setConnections([connection1, connection2, connection3]);
+      
+      logEvent('success', 'Demo Ready', 'Circular dependency created - send data in a cycle to trigger deadlock detection');
+
+      toast({
+        title: "Deadlock Demo Created",
+        description: "Send data between processes to simulate a deadlock scenario",
+      });
+    }, 100);
+  };
+
+  // Demo for pipe communication
+  const createPipeDemoSimulation = () => {
+    setProcesses([]);
+    setConnections([]);
+    setDataTransfers([]);
+    
+    logEvent('info', 'Demo Started', 'Setting up Pipe Communication simulation');
+
+    // Create parent and child process
+    const parentProcess: Process = {
+      id: generateId(),
+      name: "Parent Process",
+      position: { x: 250, y: 200 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    const childProcess: Process = {
+      id: generateId(),
+      name: "Child Process",
+      position: { x: 450, y: 200 },
+      state: 'idle',
+      resources: [],
+      waitingFor: null
+    };
+
+    setProcesses([parentProcess, childProcess]);
+
+    setTimeout(() => {
+      // Create bidirectional pipe
+      const pipeConnection: Connection = {
+        id: generateId(),
+        from: parentProcess.id,
+        to: childProcess.id,
+        type: 'pipe',
+        state: 'idle',
+        currentLoad: 0
+      };
+
+      setConnections([pipeConnection]);
+      
+      logEvent('success', 'Demo Ready', 'Pipe communication channel created between parent and child process');
+
+      toast({
+        title: "Pipe Demo Created",
+        description: "Send data between parent and child processes through pipe",
       });
     }, 100);
   };
@@ -200,26 +377,39 @@ const ProcessCanvas: React.FC = () => {
     if (dataTransfers.length === 0) return;
     
     const interval = setInterval(() => {
-      setDataTransfers(prev => prev.map(transfer => {
-        if (transfer.progress >= 100) {
+      setDataTransfers(prev => {
+        const completedTransfers = prev.filter(t => t.progress >= 100);
+        const updatedTransfers = prev.map(transfer => {
+          if (transfer.progress >= 100) return transfer;
+          
+          return {
+            ...transfer,
+            progress: transfer.progress + 10
+          };
+        }).filter(t => t.progress < 100);
+        
+        // Log completed transfers
+        completedTransfers.forEach(transfer => {
           const connection = connections.find(c => c.id === transfer.connectionId);
           if (connection) {
-            setConnections(connections.map(c => 
+            const fromProcess = processes.find(p => p.id === connection.from);
+            const toProcess = processes.find(p => p.id === connection.to);
+            
+            logEvent('success', 'Data Transfer Complete', 
+              `Data successfully transferred from ${fromProcess?.name} to ${toProcess?.name}`);
+            
+            setConnections(prev => prev.map(c => 
               c.id === connection.id ? { ...c, currentLoad: Math.max(0, (c.currentLoad || 0) - 1) } : c
             ));
           }
-          return transfer;
-        }
+        });
         
-        return {
-          ...transfer,
-          progress: transfer.progress + 10
-        };
-      }).filter(t => t.progress < 100));
+        return updatedTransfers;
+      });
     }, 500);
     
     return () => clearInterval(interval);
-  }, [dataTransfers, connections]);
+  }, [dataTransfers, connections, processes]);
 
   const checkForDeadlocks = () => {
     const activeConnections = connections.filter(c => c.state === 'active');
@@ -231,6 +421,8 @@ const ProcessCanvas: React.FC = () => {
     });
     
     if (activeConnections.length > 0 && busyProcesses.size === processes.length && processes.length > 1) {
+      logEvent('error', 'Deadlock Detected', 'All processes are waiting for resources in a circular dependency');
+      
       toast({
         title: "Potential Deadlock Detected",
         description: "All processes are waiting for resources",
@@ -242,6 +434,8 @@ const ProcessCanvas: React.FC = () => {
   useEffect(() => {
     connections.forEach(conn => {
       if (conn.type === 'queue' && conn.capacity && conn.currentLoad && conn.currentLoad >= conn.capacity * 0.8) {
+        logEvent('warning', 'Queue Bottleneck', `Queue is at ${Math.round((conn.currentLoad / conn.capacity) * 100)}% capacity`);
+        
         toast({
           title: "Bottleneck Detected",
           description: `Queue is at ${Math.round((conn.currentLoad / conn.capacity) * 100)}% capacity`,
@@ -279,6 +473,27 @@ const ProcessCanvas: React.FC = () => {
         >
           <span className="text-xs">Producer-Consumer Demo</span>
         </Button>
+        
+        {demoMode && (
+          <>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={createDeadlockDemoSimulation}
+              className="flex items-center gap-1"
+            >
+              <span className="text-xs">Deadlock Demo</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={createPipeDemoSimulation}
+              className="flex items-center gap-1"
+            >
+              <span className="text-xs">Pipe Demo</span>
+            </Button>
+          </>
+        )}
       </div>
       <div 
         ref={canvasRef}
@@ -329,7 +544,7 @@ const ProcessCanvas: React.FC = () => {
             <div className="text-center">
               <p className="mb-2">Click anywhere to add a process</p>
               <p>Then create IPC connections between processes</p>
-              <p className="mt-4">Or use the Producer-Consumer Demo button</p>
+              <p className="mt-4">Or use the Demo buttons to see examples</p>
             </div>
           </div>
         )}
