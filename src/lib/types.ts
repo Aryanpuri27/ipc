@@ -1,7 +1,8 @@
+export type IPCType = "pipe" | "queue" | "memory";
 
-export type IPCType = 'pipe' | 'queue' | 'memory';
+export type ProcessState = "idle" | "running" | "blocked" | "deadlocked";
 
-export type ProcessState = 'idle' | 'running' | 'blocked';
+export type MemoryAccessType = "read" | "write";
 
 export interface Position {
   x: number;
@@ -15,6 +16,10 @@ export interface Process {
   state: ProcessState;
   resources: string[]; // IDs of resources held
   waitingFor: string | null; // ID of resource waiting for
+  memoryAccess?: {
+    type: MemoryAccessType;
+    regionId: string;
+  };
 }
 
 export interface Connection {
@@ -22,9 +27,17 @@ export interface Connection {
   from: string; // Process ID
   to: string; // Process ID
   type: IPCType;
-  state: 'idle' | 'active';
+  state: "idle" | "active" | "deadlocked";
   capacity?: number; // For queues
   currentLoad?: number; // Current messages in queue
+  memoryRegion?: {
+    id: string;
+    semaphore: {
+      maxReaders: number;
+      currentReaders: number;
+      hasWriter: boolean;
+    };
+  };
 }
 
 export interface DataTransfer {
@@ -33,4 +46,5 @@ export interface DataTransfer {
   startTime: number;
   progress: number; // 0-100
   size: number; // Visual size of data packet
+  type: "produce" | "consume";
 }

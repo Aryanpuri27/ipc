@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -85,6 +84,22 @@
 
 .bottleneck-warning {
   @apply text-amber-500 font-semibold;
+}
+
+.deadlocked-process {
+  @apply ring-2 ring-destructive shadow-lg shadow-destructive/30;
+}
+
+.deadlock-connection {
+  @apply stroke-destructive stroke-[3px] animate-pulse;
+}
+
+.deadlock-indicator {
+  @apply fill-destructive animate-pulse;
+}
+
+.deadlock-path {
+  @apply stroke-destructive stroke-[3px] stroke-dasharray-4;
 }
 
 @keyframes flow {
